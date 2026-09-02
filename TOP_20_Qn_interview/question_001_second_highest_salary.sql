@@ -32,3 +32,11 @@ select  distinct salary from RankedSalaries where salary_rank = 2
 select MAX(SALARY) AS SECOND_HIGHEST FROM employees 
 WHERE SALARY <(select MAX(salary) from employees)
 
+-- 4 top
+SELECT TOP 1 salary 
+FROM (
+    SELECT DISTINCT TOP 2 salary 
+    FROM Employee 
+    ORDER BY salary DESC
+) AS Temp
+ORDER BY salary ASC;
