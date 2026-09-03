@@ -1,0 +1,2 @@
+CREATE DATABASE myFirstDataBase
+USE myFirstDataBase
