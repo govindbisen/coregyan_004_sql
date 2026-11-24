@@ -199,11 +199,22 @@ INNER JOIN Customers c
     -- 14 An alias created in the SELECT list cannot be referenced in the WHERE clause of the same query. How does SQL's logical execution order explain this?
 
     -- Because SQL evaluates WHERE before SELECT, a SELECT-list alias does not exist yet when WHERE is processed. Repeat the expression or compute it earlier (subquery or CTE) and filter in the outer query; some databases may permit aliases elsewhere but you should not rely on that behavior.
-  
-
-   -- 15 
-    
         
+
+
+
+   -- 15 A ranking query contains duplicate salaries. How will ROW_NUMBER(), RANK(), and DENSE_RANK() assign values differently?
+
+SELECT table_schema, table_name 
+FROM information_schema.tables 
+WHERE table_type = 'BASE TABLE';
+
+select customer_id,	customer_name,	city,	signup_date from Customers 
+select order_id,customer_id	,order_date	,rank() over(order by amount asc) as highest_amount_rank, amount,	status from Orders
+
+
+
+   
   
     
         
