@@ -156,3 +156,57 @@ FROM Customers c
 LEFT JOIN  Orders o 
     ON c.customer_id = o.customer_id
     where order_id  IS NULL 
+
+
+    -- 10 Write a query to find customers who placed more than one order?
+   
+       SELECT 
+       count( o.order_id) as numberof_order, 
+        c.customer_id,c.customer_name
+   
+        FROM Orders o
+        INNER JOIN Customers c 
+            ON o.customer_id = c.customer_id
+            group by c.customer_id,c.customer_name 
+            having count( o.order_id) >1
+   
+   -- 11  Write a query to find the highest-spending customer based only on delivered orders?
+
+
+
+   SELECT
+   TOP 1
+    o.order_id,
+    c.customer_name,
+    o.status,
+    sum(amount) as totalSpend
+FROM Orders o
+INNER JOIN Customers c 
+    ON o.customer_id = c.customer_id
+    group by c.customer_id,c.customer_name , o.status,o.order_id
+    having o.status = 'Delivered'
+    order by sum(amount) desc
+
+
+    -- 12 A table has 100 million records. You want to remove all rows as quickly as possible while keeping the table. Which SQL command will you use?
+
+    Truncate table <tablename>
+
+    --13 A new intern should only be able to view the Employees table but should not modify it. Which SQL command will you use?
+
+    GRANT SELECT ON database_name.Employees TO 'intern_user'@'localhost';
+
+    -- 14 An alias created in the SELECT list cannot be referenced in the WHERE clause of the same query. How does SQL's logical execution order explain this?
+
+    -- Because SQL evaluates WHERE before SELECT, a SELECT-list alias does not exist yet when WHERE is processed. Repeat the expression or compute it earlier (subquery or CTE) and filter in the outer query; some databases may permit aliases elsewhere but you should not rely on that behavior.
+  
+
+   -- 15 
+    
+        
+  
+    
+        
+
+
+
