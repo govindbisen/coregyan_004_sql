@@ -209,15 +209,136 @@ SELECT table_schema, table_name
 FROM information_schema.tables 
 WHERE table_type = 'BASE TABLE';
 
-select customer_id,	customer_name,	city,	signup_date from Customers 
-select order_id,customer_id	,order_date	,rank() over(order by amount asc) as highest_amount_rank, amount,	status from Orders
+/**
+
+All three assign sequential numbers to rows based on a specific order, 
+but they differ in how they handle ties:
+ROW_NUMBER assigns a unique number to every row,
+RANK gives tied rows the same rank and skips the next number,while 
+DENSE_RANK gives tied rows the same rank without skipping any numbers.
+
+**/
+select 
+order_id,
+customer_id	,
+order_date	,
+row_number() over(order by amount desc) as highest_amount_rank, amount,	
+rank() over (order by amount desc) as highest_amount_rank, amount,	
+dense_rank() over(order by amount desc) as highest_amount_dense_rank, amount,	
+status 
+from Orders
+
+
+---16 A table contains duplicate and NULL email values. How will COUNT(*), COUNT(email), and COUNT(DISTINCT email) differ?
+
+ALTER TABLE Customers 
+ADD email VARCHAR(100);
+
+UPDATE Customers SET email = 'aditi@gmail.com'  WHERE customer_id = 1;
+UPDATE Customers SET email = 'rahul@gmail.com'  WHERE customer_id = 2;
+UPDATE Customers SET email = 'simran@gmail.com' WHERE customer_id = 3;
+UPDATE Customers SET email = NULL               WHERE customer_id = 4;  -- NULL value 1
+UPDATE Customers SET email = 'vikram@gmail.com' WHERE customer_id = 5;
+UPDATE Customers SET email = 'aditi@gmail.com'  WHERE customer_id = 6;  -- Duplicate email (same as ID 1)
+UPDATE Customers SET email = 'karan@gmail.com'  WHERE customer_id = 7;
+UPDATE Customers SET email = NULL               WHERE customer_id = 8;  -- NULL value 2
+UPDATE Customers SET email = 'rahul@gmail.com'  WHERE customer_id = 9;  -- Duplicate email (same as ID 2)
+UPDATE Customers SET email = 'meera@gmail.com'  WHERE customer_id = 10;
+
+select * from Customers
+select count(*) from Customers
+select count(distinct email) from Customers -- duplicate and null dono nahi lega
+select count(email) from Customers -- sirf null count nahi hoga 
+
+--17 A report contains missing values across primary_phone, alternate_phone, and emergency_phone. How would you return the first available value and show 'Not Available' when all three are NULL?
+-- The COALESCE() function returns the first non-null value in a list.
+SELECT customer_name,
+       COALESCE(primary_phone, alternate_phone, emergency_phone, 'Not Available') AS contact_phone
+FROM Customers;
 
 
 
-   
-  
-    
-        
+-- 18  Write a query to find each user's previous login date?
+-- Table banate hain jisme user ka ID aur uski login date store hogi
+CREATE TABLE UserLogins (
+    login_id INT PRIMARY KEY,
+    user_id INT,
+    login_date DATE
+);
+
+-- Practice ke liye 3 alag-alag users ka login data insert karte hain
+INSERT INTO UserLogins (login_id, user_id, login_date) VALUES
+(1, 101, '2026-11-01'), -- User 101 ka pehla login
+(2, 101, '2026-11-05'), -- User 101 ka doosra login (is se pehle 01-Nov tha)
+(3, 101, '2026-11-12'), -- User 101 ka teesra login (is se pehle 05-Nov tha)
+(4, 102, '2026-11-02'), -- User 102 ka pehla login
+(5, 102, '2026-11-10'), -- User 102 ka doosra login (is se pehle 02-Nov tha)
+(6, 103, '2026-11-15'); -- User 103 ne sirf ek hi baar login kiya hai
+
+
+select * from UserLogins
+
+SELECT
+  user_id,
+  login_date,
+  LAG(login_date) OVER (PARTITION BY  user_id order by login_date) as previous_login , -- 18  Write a query to find each user's previous login date?
+  LEAD(LOGIN_DATE) OVER (PARTITION BY user_id order by login_date) as previous_login   -- each user's previous upcoming login date?
+FROM UserLogins;
+
+
+
+-- 19 A salary report must classify employees into Low, Medium, and High salary bands inside the SELECT output. Which conditional expression would you use, and why is it preferable to IF here?
+
+SELECT * FROM Orders
+SELECT order_id,amount,
+CASE 
+WHEN amount < 2000 THEN 'LOW'
+WHEN amount < 5000 AND amount>2000 THEN 'MEDIUM'
+ELSE 'HIGH' 
+END AS PREFERENCE
+
+from Orders 
+
+
+-- 20 A percentage calculation divides achieved_sales by target_sales, but some targets are zero. How would you prevent a divide-by-zero error while preserving those rows?
+CREATE TABLE SalesTargets (
+    rep_id INT PRIMARY KEY,
+    rep_name VARCHAR(50),
+    achieved_sales INT,
+    target_sales INT
+);
+
+INSERT INTO SalesTargets (rep_id, rep_name, achieved_sales, target_sales) VALUES
+(1, 'Aarav', 80000, 100000),  -- Normal target (80%)
+(2, 'Meera', 45000, 0),       -- Zero target (Intern/New joiner - causes error!)
+(3, 'Kabir', 0, 50000),       -- Zero achieved sales (0%)
+(4, 'Isha', 60000, 0);        -- Zero target (causes error!)
+
+SELECT * FROM SalesTargets
+--- NULLIF(target_sales, 0) compares target_sales to 0. If they are equal, it returns NULL. Otherwise, it returns the original target_sales.
+-- • When target_sales is 100000=> NULLIF(100000, 0) returns 100000.
+-- • When target_sales is 0 => NULLIF(0, 0) returns NULL.
+-- In SQL, dividing any number by NULL always results in NULL—never an error. achieved_sales / NULLIF(target_sales, 0) 
+
+
+SELECT 
+    rep_name,
+    achieved_sales,
+    target_sales,
+    achieved_sales / NULLIF(target_sales, 0) AS achievement_pct 
+FROM SalesTargets;
+
+SELECT 
+    rep_name,
+    achieved_sales,
+    target_sales,
+    COALESCE(ROUND((achieved_sales * 100.0) / NULLIF(target_sales, 0), 2), 0) AS achievement_pct
+FROM SalesTargets;
+
+
+-- 21 Write a query to delete duplicate records while keeping the newest record for each email?   
+
+-- NEXT - https://leetcode.com/studyplan/top-sql-50/
 
 
 
